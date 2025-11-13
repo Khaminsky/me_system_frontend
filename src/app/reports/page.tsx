@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'react-toastify';
 
 interface Survey {
   id: number;
@@ -45,7 +46,7 @@ export default function ReportsPage() {
       setSummary(response.data);
     } catch (error) {
       console.error('Failed to fetch summary:', error);
-      alert('Failed to load report summary');
+      toast.error('Failed to load report summary');
     }
   };
 
@@ -63,8 +64,9 @@ export default function ReportsPage() {
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
+      toast.success('Report exported successfully!');
     } catch (error: any) {
-      alert('Failed to export report: ' + (error.response?.data?.detail || error.message));
+      toast.error('Failed to export report: ' + (error.response?.data?.detail || error.message));
     } finally {
       setExporting(false);
     }

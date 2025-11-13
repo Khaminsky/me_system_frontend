@@ -18,6 +18,12 @@ interface UniqueNullData {
   null_percentage: number;
 }
 
+interface ProblematicColumn {
+  column: string;
+  issue: string;
+  percentage: number;
+}
+
 interface ValidationReport {
   summary: {
     total_rows: number;
@@ -30,7 +36,7 @@ interface ValidationReport {
   missing_values: Record<string, MissingValueData>;
   data_types: Record<string, any>;
   unique_and_null: Record<string, UniqueNullData>;
-  problematic_columns: string[];
+  problematic_columns: ProblematicColumn[];
   recommendations: string[];
 }
 
@@ -160,9 +166,17 @@ export default function DataCleaningPage() {
                 <h2 className="text-xl font-bold text-gray-800 mb-4">Problematic Columns</h2>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {report.problematic_columns.length > 0 ? (
-                    report.problematic_columns.map((column) => (
-                      <div key={column} className="py-2 border-b">
-                        <span className="text-gray-700">{column}</span>
+                    report.problematic_columns.map((item, index) => (
+                      <div key={`${item.column}-${index}`} className="py-2 border-b">
+                        <div className="flex justify-between items-start">
+                          <span className="text-gray-700 font-medium">{item.column}</span>
+                          <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                            {item.percentage}% missing
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Issue: {item.issue.replace(/_/g, ' ')}
+                        </p>
                       </div>
                     ))
                   ) : (

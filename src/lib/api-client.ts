@@ -60,12 +60,42 @@ class APIClient {
     return this.client.get(`/surveys/${id}/`);
   }
 
+  async getSurveyFields(id: number) {
+    return this.client.get(`/surveys/${id}/fields/`);
+  }
+
   async uploadSurvey(formData: FormData) {
     return this.client.post('/surveys/upload/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
+  }
+
+  async processSheets(surveyId: number, sheetNames: string[]) {
+    return this.client.post(`/surveys/${surveyId}/process-sheet/`, {
+      sheet_names: sheetNames,
+    });
+  }
+
+  async updateSurvey(surveyId: number, data: FormData) {
+    return this.client.patch(`/surveys/${surveyId}/`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  async deleteSurvey(surveyId: number) {
+    return this.client.delete(`/surveys/${surveyId}/`);
+  }
+
+  async restoreSurvey(surveyId: number) {
+    return this.client.post(`/surveys/${surveyId}/restore/`);
+  }
+
+  async getArchivedSurveys() {
+    return this.client.get('/surveys/archived/');
   }
 
   // Data Cleaning endpoints
@@ -82,12 +112,37 @@ class APIClient {
     return this.client.get(`/indicators/${id}/`);
   }
 
-  async computeIndicators(surveyId: number) {
-    return this.client.get(`/indicators/compute/${surveyId}/`);
+  async computeIndicators(surveyId: number, indicatorIds: number[]) {
+    return this.client.post(`/indicators/compute/${surveyId}/`, {
+      indicator_ids: indicatorIds
+    });
   }
 
   async createIndicator(data: any) {
     return this.client.post('/indicators/', data);
+  }
+
+  async updateIndicator(indicatorId: number, data: any) {
+    return this.client.patch(`/indicators/${indicatorId}/`, data);
+  }
+
+  async deleteIndicator(indicatorId: number) {
+    return this.client.delete(`/indicators/${indicatorId}/`);
+  }
+
+  async validateFormula(formula: string, surveyId?: number) {
+    return this.client.post('/indicators/validate-formula/', {
+      formula,
+      survey_id: surveyId
+    });
+  }
+
+  async previewIndicator(surveyId: number, formula: string, filterCriteria?: Record<string, any>) {
+    return this.client.post('/indicators/preview/', {
+      survey_id: surveyId,
+      formula,
+      filter_criteria: filterCriteria || {}
+    });
   }
 
   // Reports endpoints

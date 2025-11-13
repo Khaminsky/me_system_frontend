@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface User {
   id: number;
@@ -40,9 +41,9 @@ export default function UsersPage() {
       await apiClient.createUser(data);
       reset();
       fetchUsers();
-      alert('User created successfully!');
+      toast.success('User created successfully!');
     } catch (error: any) {
-      alert('Failed to create user: ' + (error.response?.data?.detail || error.message));
+      toast.error('Failed to create user: ' + (error.response?.data?.detail || error.message));
     } finally {
       setCreating(false);
     }

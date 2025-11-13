@@ -3,6 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  ClipboardList,
+  ShieldCheck,
+  TrendingUp,
+  FileText,
+  Users,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,12 +30,12 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/surveys', label: 'Surveys', icon: '📋' },
-    { href: '/data-cleaning', label: 'Data Validation', icon: '🧹' },
-    { href: '/indicators', label: 'Indicators', icon: '📈' },
-    { href: '/reports', label: 'Reports', icon: '📄' },
-    { href: '/users', label: 'Users', icon: '👥' },
+    { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { href: '/surveys', label: 'Surveys', Icon: ClipboardList },
+    { href: '/data-cleaning', label: 'Data Validation', Icon: ShieldCheck },
+    { href: '/indicators', label: 'Indicators', Icon: TrendingUp },
+    { href: '/reports', label: 'Reports', Icon: FileText },
+    { href: '/users', label: 'Users', Icon: Users },
   ];
 
   return (
@@ -42,22 +53,25 @@ export default function Layout({ children }: LayoutProps) {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1 hover:bg-gray-800 rounded"
           >
-            {sidebarOpen ? '◀' : '▶'}
+            {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
           </button>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-800 transition"
-            >
-              <span className="text-xl">{item.icon}</span>
-              {sidebarOpen && <span>{item.label}</span>}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const IconComponent = item.Icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+              >
+                <IconComponent className="w-5 h-5" />
+                {sidebarOpen && <span>{item.label}</span>}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Logout */}
@@ -66,7 +80,7 @@ export default function Layout({ children }: LayoutProps) {
             onClick={handleLogout}
             className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-800 transition text-left"
           >
-            <span className="text-xl">🚪</span>
+            <LogOut className="w-5 h-5" />
             {sidebarOpen && <span>Logout</span>}
           </button>
         </div>
