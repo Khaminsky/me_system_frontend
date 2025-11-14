@@ -6,6 +6,9 @@ import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 interface Indicator {
   id: number;
@@ -43,6 +46,23 @@ export default function IndicatorsPage() {
     indicatorName: string;
   }>({ isOpen: false, indicatorId: null, indicatorName: '' });
   const { register, handleSubmit, setValue, reset } = useForm();
+
+  // Pagination and search
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    searchQuery,
+    paginatedItems,
+    filteredItems,
+    setCurrentPage,
+    setItemsPerPage,
+    setSearchQuery
+  } = usePagination({
+    items: indicators,
+    itemsPerPage: 10,
+    searchFields: ['name', 'type', 'unit', 'formula']
+  });
 
   useEffect(() => {
     fetchData();
@@ -291,31 +311,40 @@ export default function IndicatorsPage() {
 
         {/* Indicators List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-gray-800">Available Indicators</h2>
+            <div className="w-full sm:w-96">
+              <SearchBar
+                placeholder="Search by name, type, unit, or formula..."
+                onSearch={setSearchQuery}
+              />
+            </div>
           </div>
 
           {loading ? (
             <div className="p-6 text-center text-gray-600">Loading indicators...</div>
-          ) : indicators.length === 0 ? (
-            <div className="p-6 text-center text-gray-600">No indicators defined yet</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="p-6 text-center text-gray-600">
+              {searchQuery ? `No indicators found matching "${searchQuery}"` : 'No indicators defined yet'}
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Unit</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Formula</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Baseline</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Target</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {indicators.map((indicator) => (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Unit</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Formula</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Baseline</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Target</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedItems.map((indicator) => (
                     <tr key={indicator.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-800">{indicator.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -355,6 +384,17 @@ export default function IndicatorsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredItems.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          </>
           )}
         </div>
 

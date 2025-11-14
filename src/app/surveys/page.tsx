@@ -6,6 +6,9 @@ import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 interface Survey {
   id: number;
@@ -31,6 +34,23 @@ export default function SurveysPage() {
     surveyName: string;
   }>({ isOpen: false, surveyId: null, surveyName: '' });
   const { register, handleSubmit, reset, setValue } = useForm();
+
+  // Pagination and search
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    searchQuery,
+    paginatedItems,
+    filteredItems,
+    setCurrentPage,
+    setItemsPerPage,
+    setSearchQuery
+  } = usePagination({
+    items: surveys,
+    itemsPerPage: 10,
+    searchFields: ['name', 'description']
+  });
 
   useEffect(() => {
     fetchSurveys();
@@ -322,28 +342,37 @@ export default function SurveysPage() {
 
         {/* Surveys List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-gray-800">Uploaded Surveys</h2>
+            <div className="w-full sm:w-96">
+              <SearchBar
+                placeholder="Search by name or description..."
+                onSearch={setSearchQuery}
+              />
+            </div>
           </div>
 
           {loading ? (
             <div className="p-6 text-center text-gray-600">Loading surveys...</div>
-          ) : surveys.length === 0 ? (
-            <div className="p-6 text-center text-gray-600">No surveys uploaded yet</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="p-6 text-center text-gray-600">
+              {searchQuery ? `No surveys found matching "${searchQuery}"` : 'No surveys uploaded yet'}
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Records</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Upload Date</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {surveys.map((survey) => (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Records</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Upload Date</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedItems.map((survey) => (
                     <tr key={survey.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-800">{survey.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{survey.description}</td>
@@ -376,6 +405,17 @@ export default function SurveysPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredItems.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          </>
           )}
         </div>
       </div>

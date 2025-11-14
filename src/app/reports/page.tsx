@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'react-toastify';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import { usePagination } from '@/hooks/usePagination';
 
 interface Survey {
   id: number;
@@ -23,6 +26,23 @@ export default function ReportsPage() {
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+
+  // Pagination and search for surveys
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    searchQuery,
+    paginatedItems,
+    filteredItems,
+    setCurrentPage,
+    setItemsPerPage,
+    setSearchQuery
+  } = usePagination({
+    items: surveys,
+    itemsPerPage: 9, // 3x3 grid
+    searchFields: ['name']
+  });
 
   useEffect(() => {
     fetchSurveys();
@@ -79,29 +99,56 @@ export default function ReportsPage() {
 
         {/* Survey Selection */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Select Survey</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {loading ? (
-              <p className="text-gray-600">Loading surveys...</p>
-            ) : surveys.length === 0 ? (
-              <p className="text-gray-600">No surveys available</p>
-            ) : (
-              surveys.map((survey) => (
-                <button
-                  key={survey.id}
-                  onClick={() => handleSurveySelect(survey.id)}
-                  className={`p-4 rounded-lg border-2 transition text-left ${
-                    selectedSurvey === survey.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <p className="font-semibold text-gray-800">{survey.name}</p>
-                  <p className="text-sm text-gray-600">Click to view report</p>
-                </button>
-              ))
-            )}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Select Survey</h2>
+            <div className="w-full sm:w-96">
+              <SearchBar
+                placeholder="Search surveys..."
+                onSearch={setSearchQuery}
+              />
+            </div>
           </div>
+
+          {loading ? (
+            <p className="text-gray-600">Loading surveys...</p>
+          ) : filteredItems.length === 0 ? (
+            <p className="text-gray-600">
+              {searchQuery ? `No surveys found matching "${searchQuery}"` : 'No surveys available'}
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                {paginatedItems.map((survey) => (
+                  <button
+                    key={survey.id}
+                    onClick={() => handleSurveySelect(survey.id)}
+                    className={`p-4 rounded-lg border-2 transition text-left ${
+                      selectedSurvey === survey.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <p className="font-semibold text-gray-800">{survey.name}</p>
+                    <p className="text-sm text-gray-600">Click to view report</p>
+                  </button>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="border-t border-gray-200 pt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalItems={filteredItems.length}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setCurrentPage}
+                    onItemsPerPageChange={setItemsPerPage}
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Report Summary */}

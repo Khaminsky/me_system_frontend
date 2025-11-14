@@ -5,6 +5,10 @@ import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import SortableTableHeader from '@/components/SortableTableHeader';
+import { usePagination } from '@/hooks/usePagination';
 
 interface User {
   id: number;
@@ -19,6 +23,28 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const { register, handleSubmit, reset } = useForm();
+
+  // Pagination and search
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    searchQuery,
+    paginatedItems,
+    filteredItems,
+    sortField,
+    sortDirection,
+    setCurrentPage,
+    setItemsPerPage,
+    setSearchQuery,
+    setSorting
+  } = usePagination({
+    items: users,
+    itemsPerPage: 10,
+    searchFields: ['username', 'email', 'role'],
+    defaultSortField: 'username',
+    defaultSortDirection: 'asc'
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -125,28 +151,58 @@ export default function UsersPage() {
 
         {/* Users List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold text-gray-800">Users</h2>
+            <div className="w-full sm:w-96">
+              <SearchBar
+                placeholder="Search by username, email, or role..."
+                onSearch={setSearchQuery}
+              />
+            </div>
           </div>
 
           {loading ? (
             <div className="p-6 text-center text-gray-600">Loading users...</div>
-          ) : users.length === 0 ? (
-            <div className="p-6 text-center text-gray-600">No users found</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="p-6 text-center text-gray-600">
+              {searchQuery ? `No users found matching "${searchQuery}"` : 'No users found'}
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Username</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <SortableTableHeader
+                        field="username"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Username
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="email"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Email
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="role"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Role
+                      </SortableTableHeader>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedItems.map((user) => (
                     <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-800">{user.username}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
@@ -171,6 +227,17 @@ export default function UsersPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredItems.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          </>
           )}
         </div>
       </div>
