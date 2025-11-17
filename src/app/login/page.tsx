@@ -74,7 +74,6 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-gray-600 mt-6 text-sm">
-          Demo credentials: admin / AdminPass@2025
         </p>
       </div>
     </div>

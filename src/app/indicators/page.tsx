@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import SearchBar from '@/components/SearchBar';
 import Pagination from '@/components/Pagination';
+import SortableTableHeader from '@/components/SortableTableHeader';
 import { usePagination } from '@/hooks/usePagination';
 
 interface Indicator {
@@ -30,6 +31,93 @@ interface Indicator {
 interface Survey {
   id: number;
   name: string;
+}
+
+// Action Menu Component
+function ActionMenu({
+  indicator,
+  onEdit,
+  onDelete
+}: {
+  indicator: Indicator;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handleToggle = () => {
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right
+      });
+    }
+    setIsOpen(!isOpen);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={handleToggle}
+        className="p-2 hover:bg-gray-100 rounded-lg transition"
+        title="Actions"
+      >
+        <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Menu */}
+          <div
+            className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20"
+            style={{ top: `${menuPosition.top}px`, right: `${menuPosition.right}px` }}
+          >
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onEdit();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+
+              <div className="border-t border-gray-200 my-1" />
+
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onDelete();
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function IndicatorsPage() {
@@ -55,13 +143,18 @@ export default function IndicatorsPage() {
     searchQuery,
     paginatedItems,
     filteredItems,
+    sortField,
+    sortDirection,
     setCurrentPage,
     setItemsPerPage,
-    setSearchQuery
+    setSearchQuery,
+    setSorting
   } = usePagination({
     items: indicators,
     itemsPerPage: 10,
-    searchFields: ['name', 'type', 'unit', 'formula']
+    searchFields: ['name', 'type', 'unit', 'formula'],
+    defaultSortField: 'name',
+    defaultSortDirection: 'asc'
   });
 
   useEffect(() => {
@@ -333,12 +426,54 @@ export default function IndicatorsPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Unit</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Formula</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Baseline</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Target</th>
+                      <SortableTableHeader
+                        field="name"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Name
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="indicator_type"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Type
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="unit"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Unit
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="formula"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Formula
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="baseline"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Baseline
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        field="target"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Target
+                      </SortableTableHeader>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                     </tr>
@@ -365,19 +500,12 @@ export default function IndicatorsPage() {
                           {indicator.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2">
-                        <button
-                          onClick={() => handleEdit(indicator)}
-                          className="text-yellow-600 hover:text-yellow-800 font-medium"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(indicator.id, indicator.name)}
-                          className="text-red-500 hover:text-red-700 font-medium"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-6 py-4 text-sm">
+                        <ActionMenu
+                          indicator={indicator}
+                          onEdit={() => handleEdit(indicator)}
+                          onDelete={() => handleDelete(indicator.id, indicator.name)}
+                        />
                       </td>
                     </tr>
                   ))}

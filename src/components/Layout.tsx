@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  FolderKanban,
   ClipboardList,
   ShieldCheck,
   TrendingUp,
@@ -12,8 +13,12 @@ import {
   Users,
   LogOut,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FolderOpen,
+  Settings as SettingsIcon
 } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
+import Image from 'next/image';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,6 +27,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
+  const { settings } = useSettings();
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -31,11 +37,14 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+    { href: '/projects', label: 'Projects', Icon: FolderKanban },
     { href: '/surveys', label: 'Surveys', Icon: ClipboardList },
+    { href: '/repository', label: 'Documents', Icon: FolderOpen },
     { href: '/data-cleaning', label: 'Data Validation', Icon: ShieldCheck },
     { href: '/indicators', label: 'Indicators', Icon: TrendingUp },
     { href: '/reports', label: 'Reports', Icon: FileText },
     { href: '/users', label: 'Users', Icon: Users },
+    { href: '/settings', label: 'Settings', Icon: SettingsIcon },
   ];
 
   return (
@@ -44,11 +53,30 @@ export default function Layout({ children }: LayoutProps) {
       <div
         className={`${
           sidebarOpen ? 'w-64' : 'w-20'
-        } bg-gray-900 text-white transition-all duration-300 flex flex-col`}
+        } text-white transition-all duration-300 flex flex-col`}
+        style={{ backgroundColor: settings?.sidebar_color || '#1F2937' }}
       >
         {/* Logo */}
         <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          {sidebarOpen && <h1 className="text-xl font-bold">M&E System</h1>}
+          {sidebarOpen && (
+            <div className="flex items-center gap-3">
+              {settings?.logo_url && (
+                <div className="w-8 h-8 relative flex-shrink-0">
+                  <Image
+                    src={settings.logo_url}
+                    alt="Logo"
+                    width={32}
+                    height={32}
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              )}
+              <h1 className="text-xl font-bold">
+                {settings?.app_name || 'M&E System'}
+              </h1>
+            </div>
+          )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1 hover:bg-gray-800 rounded"
@@ -90,7 +118,9 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
         <div className="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-800">M&E Data Intelligence System</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {settings?.app_name || 'M&E Data Intelligence System'}
+          </h2>
           <div className="flex items-center space-x-4">
             <span className="text-gray-600">Welcome!</span>
             <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">

@@ -51,6 +51,39 @@ class APIClient {
     return this.client.get('/users/auth/profile/');
   }
 
+  // Project endpoints
+  async getProjects() {
+    return this.client.get('/projects/');
+  }
+
+  async getProject(id: number) {
+    return this.client.get(`/projects/${id}/`);
+  }
+
+  async createProject(data: { name: string; description?: string }) {
+    return this.client.post('/projects/', data);
+  }
+
+  async updateProject(id: number, data: { name?: string; description?: string }) {
+    return this.client.patch(`/projects/${id}/`, data);
+  }
+
+  async deleteProject(id: number) {
+    return this.client.delete(`/projects/${id}/`);
+  }
+
+  async restoreProject(id: number) {
+    return this.client.post(`/projects/${id}/restore/`);
+  }
+
+  async getArchivedProjects() {
+    return this.client.get('/projects/archived/');
+  }
+
+  async getProjectSurveys(id: number) {
+    return this.client.get(`/projects/${id}/surveys/`);
+  }
+
   // Survey endpoints
   async getSurveys() {
     return this.client.get('/surveys/');
@@ -176,6 +209,131 @@ class APIClient {
 
   async deleteUser(id: number) {
     return this.client.delete(`/users/${id}/`);
+  }
+
+  // Repository/Document endpoints
+  async getDocuments(params?: {
+    project?: number;
+    document_type?: string;
+    category?: number;
+    include_archived?: boolean;
+    tags?: string;
+  }) {
+    return this.client.get('/repository/documents/', { params });
+  }
+
+  async getDocument(id: number) {
+    return this.client.get(`/repository/documents/${id}/`);
+  }
+
+  async uploadDocument(formData: FormData) {
+    return this.client.post('/repository/documents/upload/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  async createDocument(data: {
+    title: string;
+    description?: string;
+    document_type: string;
+    project: number;
+    category?: number;
+    file: File;
+    is_public?: boolean;
+    tags?: string;
+  }) {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    formData.append('document_type', data.document_type);
+    formData.append('project', data.project.toString());
+    if (data.category) formData.append('category', data.category.toString());
+    formData.append('file', data.file);
+    if (data.is_public !== undefined) formData.append('is_public', data.is_public.toString());
+    if (data.tags) formData.append('tags', data.tags);
+
+    return this.uploadDocument(formData);
+  }
+
+  async updateDocument(id: number, data: Partial<{
+    title: string;
+    description: string;
+    document_type: string;
+    category: number;
+    is_public: boolean;
+    tags: string;
+  }>) {
+    return this.client.patch(`/repository/documents/${id}/`, data);
+  }
+
+  async deleteDocument(id: number) {
+    return this.client.delete(`/repository/documents/${id}/`);
+  }
+
+  async archiveDocument(id: number) {
+    return this.client.post(`/repository/documents/${id}/archive/`);
+  }
+
+  async unarchiveDocument(id: number) {
+    return this.client.post(`/repository/documents/${id}/unarchive/`);
+  }
+
+  async downloadDocument(id: number) {
+    return this.client.get(`/repository/documents/${id}/download/`);
+  }
+
+  async getDocumentStatistics() {
+    return this.client.get('/repository/documents/statistics/');
+  }
+
+  async getRecentDocuments(limit: number = 10) {
+    return this.client.get('/repository/documents/recent/', {
+      params: { limit }
+    });
+  }
+
+  // Document Categories
+  async getDocumentCategories() {
+    return this.client.get('/repository/categories/');
+  }
+
+  async getDocumentCategory(id: number) {
+    return this.client.get(`/repository/categories/${id}/`);
+  }
+
+  async createDocumentCategory(data: { name: string; description?: string }) {
+    return this.client.post('/repository/categories/', data);
+  }
+
+  async updateDocumentCategory(id: number, data: { name?: string; description?: string }) {
+    return this.client.patch(`/repository/categories/${id}/`, data);
+  }
+
+  async deleteDocumentCategory(id: number) {
+    return this.client.delete(`/repository/categories/${id}/`);
+  }
+
+  // Document Access Logs
+  async getDocumentAccessLogs(params?: { document?: number; user?: number }) {
+    return this.client.get('/repository/access-logs/', { params });
+  }
+
+  // System Settings endpoints
+  async getSystemSettings() {
+    return this.client.get('/settings/');
+  }
+
+  async getPublicSystemSettings() {
+    return this.client.get('/settings/public/');
+  }
+
+  async updateSystemSettings(data: FormData | any) {
+    const config = data instanceof FormData
+      ? { headers: { 'Content-Type': 'multipart/form-data' } }
+      : {};
+    return this.client.patch('/settings/', data, config);
   }
 }
 
