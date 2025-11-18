@@ -50,8 +50,15 @@ function ActionMenu({
   const handleToggle = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 120; // Approximate height of the menu
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Position menu above if not enough space below
+      const shouldPositionAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
       setMenuPosition({
-        top: rect.bottom + 8,
+        top: shouldPositionAbove ? rect.top - menuHeight - 8 : rect.bottom + 8,
         right: window.innerWidth - rect.right
       });
     }

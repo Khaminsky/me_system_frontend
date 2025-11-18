@@ -136,6 +136,93 @@ class APIClient {
     return this.client.get(`/data-cleaning/validate/${surveyId}/`);
   }
 
+  async previewSurveyData(surveyId: number, page: number = 1, pageSize: number = 50) {
+    return this.client.get(`/data-cleaning/preview/${surveyId}/`, {
+      params: { page, page_size: pageSize }
+    });
+  }
+
+  async removeColumns(surveyId: number, columns: string[]) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/remove-columns/`, { columns });
+  }
+
+  async addColumn(surveyId: number, columnName: string, defaultValue: any = null) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/add-column/`, {
+      column_name: columnName,
+      default_value: defaultValue
+    });
+  }
+
+  async renameColumn(surveyId: number, oldName: string, newName: string) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/rename-column/`, {
+      old_name: oldName,
+      new_name: newName
+    });
+  }
+
+  async removeDuplicates(surveyId: number, subset?: string[], keep: string = 'first') {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/remove-duplicates/`, {
+      subset,
+      keep
+    });
+  }
+
+  async handleMissingValues(
+    surveyId: number,
+    strategy: string,
+    columns?: string[],
+    fillValue?: any
+  ) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/handle-missing/`, {
+      strategy,
+      columns,
+      fill_value: fillValue
+    });
+  }
+
+  async findReplace(
+    surveyId: number,
+    column: string,
+    findValue: any,
+    replaceValue: any,
+    useRegex: boolean = false
+  ) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/find-replace/`, {
+      column,
+      find_value: findValue,
+      replace_value: replaceValue,
+      use_regex: useRegex
+    });
+  }
+
+  async standardizeData(surveyId: number, columns: string[], operations: string[]) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/standardize/`, {
+      columns,
+      operations
+    });
+  }
+
+  async createVariable(
+    surveyId: number,
+    newColumn: string,
+    expression?: string,
+    sourceColumns?: string[],
+    operation?: string
+  ) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/create-variable/`, {
+      new_column: newColumn,
+      expression,
+      source_columns: sourceColumns,
+      operation
+    });
+  }
+
+  async saveCleanedData(surveyId: number, cleanedData: any[]) {
+    return this.client.post(`/data-cleaning/clean/${surveyId}/save-cleaned/`, {
+      cleaned_data: cleanedData
+    });
+  }
+
   // Indicators endpoints
   async getIndicators() {
     return this.client.get('/indicators/');

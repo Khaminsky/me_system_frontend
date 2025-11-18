@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'react-toastify';
@@ -37,6 +38,7 @@ interface SystemSettings {
 type TabType = 'branding' | 'theme' | 'localization' | 'preferences' | 'contact';
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('branding');
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,9 +47,27 @@ export default function SettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
 
+  // Check if user is admin
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role !== 'admin') {
+          toast.error('Access denied. Admin privileges required.');
+          router.push('/dashboard');
+          return;
+        }
+      } catch (e) {
+        router.push('/login');
+        return;
+      }
+    } else {
+      router.push('/login');
+      return;
+    }
     fetchSettings();
-  }, []);
+  }, [router]);
 
   const fetchSettings = async () => {
     try {
@@ -88,10 +108,20 @@ export default function SettingsPage() {
 
     try {
       const submitData = new FormData();
-      
+
       // Add all fields to FormData
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && key !== 'logo_url' && key !== 'favicon_url') {
+        // Skip logo_url and favicon_url (read-only fields)
+        if (key === 'logo_url' || key === 'favicon_url') {
+          return;
+        }
+
+        // Skip logo and favicon if they're strings (existing URLs, not new files)
+        if ((key === 'logo' || key === 'favicon') && typeof value === 'string') {
+          return;
+        }
+
+        if (value !== null && value !== undefined) {
           if (value instanceof File) {
             submitData.append(key, value);
           } else if (typeof value === 'boolean') {
@@ -107,7 +137,11 @@ export default function SettingsPage() {
       setFormData(response.data);
       toast.success('Settings updated successfully');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update settings');
+      console.error('Settings update error:', error.response?.data);
+      const errorMsg = error.response?.data
+        ? JSON.stringify(error.response.data)
+        : 'Failed to update settings';
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }

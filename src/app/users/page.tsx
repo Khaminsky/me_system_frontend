@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { apiClient } from '@/lib/api-client';
 import { useForm } from 'react-hook-form';
@@ -27,8 +28,15 @@ function ActionMenu({ user }: { user: User }) {
   const handleToggle = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 120; // Approximate height of the menu
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Position menu above if not enough space below
+      const shouldPositionAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
       setMenuPosition({
-        top: rect.bottom + 8,
+        top: shouldPositionAbove ? rect.top - menuHeight - 8 : rect.bottom + 8,
         right: window.innerWidth - rect.right
       });
     }
@@ -98,6 +106,7 @@ function ActionMenu({ user }: { user: User }) {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -125,9 +134,27 @@ export default function UsersPage() {
     defaultSortDirection: 'asc'
   });
 
+  // Check if user is admin
   useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.role !== 'admin') {
+          toast.error('Access denied. Admin privileges required.');
+          router.push('/dashboard');
+          return;
+        }
+      } catch (e) {
+        router.push('/login');
+        return;
+      }
+    } else {
+      router.push('/login');
+      return;
+    }
     fetchUsers();
-  }, []);
+  }, [router]);
 
   const fetchUsers = async () => {
     try {

@@ -34,7 +34,7 @@ interface FilterState {
 }
 
 // Action Menu Component
-function ActionMenu({ surveyId, surveyName, onDelete }: { surveyId: number; surveyName: string; onDelete: () => void }) {
+function ActionMenu({ surveyId, surveyName, onDelete, onEdit }: { surveyId: number; surveyName: string; onDelete: () => void; onEdit: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -42,9 +42,16 @@ function ActionMenu({ surveyId, surveyName, onDelete }: { surveyId: number; surv
   const handleToggle = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = 200; // Approximate height of the menu (4 items)
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Position menu above if not enough space below
+      const shouldPositionAbove = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
       setMenuPosition({
-        top: rect.bottom + 8, // 8px below the button
-        right: window.innerWidth - rect.right // Align to the right edge of the button
+        top: shouldPositionAbove ? rect.top - menuHeight - 8 : rect.bottom + 8,
+        right: window.innerWidth - rect.right
       });
     }
     setIsOpen(!isOpen);
@@ -93,9 +100,8 @@ function ActionMenu({ surveyId, surveyName, onDelete }: { surveyId: number; surv
 
               <button
                 onClick={() => {
-                  // Edit functionality
                   setIsOpen(false);
-                  toast.info('Edit functionality coming soon!');
+                  onEdit();
                 }}
                 className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
               >
@@ -103,6 +109,19 @@ function ActionMenu({ surveyId, surveyName, onDelete }: { surveyId: number; surv
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Edit
+              </button>
+
+              <button
+                onClick={() => {
+                  window.location.href = `/survey-cleaning?survey=${surveyId}`;
+                  setIsOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Clean Data
               </button>
 
               <button
@@ -147,6 +166,8 @@ export default function SurveysPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [showAddPanel, setShowAddPanel] = useState(false);
+  const [showEditPanel, setShowEditPanel] = useState(false);
+  const [editingSurvey, setEditingSurvey] = useState<Survey | null>(null);
   const [sheetSelection, setSheetSelection] = useState<{
     surveyId: number;
     sheetNames: string[];
@@ -171,7 +192,6 @@ export default function SurveysPage() {
   }
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SurveyFormData>();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Pagination and search
   const {
@@ -270,6 +290,34 @@ export default function SurveysPage() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string }; }; message?: string };
       toast.error('Failed to process sheets: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEdit = (survey: Survey) => {
+    setEditingSurvey(survey);
+    setShowEditPanel(true);
+  };
+
+  const onEditSubmit = async (data: { name: string; description: string }) => {
+    if (!editingSurvey) return;
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('description', data.description);
+
+      await apiClient.updateSurvey(editingSurvey.id, formData);
+
+      setShowEditPanel(false);
+      setEditingSurvey(null);
+      fetchSurveys();
+      toast.success('Survey updated successfully!');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string; detail?: string }; }; message?: string };
+      toast.error('Failed to update survey: ' + (err.response?.data?.error || err.response?.data?.detail || err.message));
     } finally {
       setUploading(false);
     }
@@ -498,6 +546,7 @@ export default function SurveysPage() {
                           <ActionMenu
                             surveyId={survey.id}
                             surveyName={survey.name}
+                            onEdit={() => handleEdit(survey)}
                             onDelete={() => setConfirmDialog({
                               isOpen: true,
                               surveyId: survey.id,
@@ -612,15 +661,14 @@ export default function SurveysPage() {
                           Upload File <span className="text-red-500">*</span>
                         </label>
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition">
-                          <input
-                            {...register('file', { required: 'File is required' })}
-                            type="file"
-                            ref={fileInputRef}
-                            accept=".csv,.xlsx,.xls"
-                            className="hidden"
-                            id="file-upload"
-                          />
-                          <label htmlFor="file-upload" className="cursor-pointer">
+                          <label htmlFor="file-upload" className="cursor-pointer block">
+                            <input
+                              {...register('file', { required: 'File is required' })}
+                              type="file"
+                              accept=".csv,.xlsx,.xls"
+                              className="hidden"
+                              id="file-upload"
+                            />
                             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
@@ -675,6 +723,88 @@ export default function SurveysPage() {
                       </button>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Edit Panel */}
+        {showEditPanel && editingSurvey && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity"
+              onClick={() => !uploading && setShowEditPanel(false)}
+            />
+
+            {/* Panel */}
+            <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+              <div className="flex flex-col h-full">
+                {/* Panel Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">Edit Survey</h2>
+                  <button
+                    onClick={() => !uploading && setShowEditPanel(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                    disabled={uploading}
+                  >
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Panel Content */}
+                <div className="flex-1 overflow-y-auto px-6 py-6">
+                  <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-6">
+                    {/* Survey Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Survey Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        {...register('name', { required: 'Survey name is required' })}
+                        type="text"
+                        defaultValue={editingSurvey.name}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter survey name"
+                      />
+                      {errors.name && (
+                        <p className="mt-1 text-sm text-red-600">{errors.name.message as string}</p>
+                      )}
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        {...register('description')}
+                        rows={4}
+                        defaultValue={editingSurvey.description}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        placeholder="Enter survey description..."
+                      />
+                    </div>
+
+                    {/* Info Note */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> You can only edit the name and description. To change the data, please upload a new survey.
+                      </p>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={uploading}
+                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {uploading ? 'Updating...' : 'Update Survey'}
+                    </button>
+                  </form>
                 </div>
               </div>
             </div>

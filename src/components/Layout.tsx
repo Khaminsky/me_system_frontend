@@ -29,23 +29,44 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const { settings } = useSettings();
 
+  // Get user from localStorage to check role
+  const getUserRole = () => {
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          return user.role || '';
+        } catch (e) {
+          return '';
+        }
+      }
+    }
+    return '';
+  };
+
+  const isAdmin = getUserRole() === 'admin';
+
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     router.push('/login');
   };
 
-  const navItems = [
-    { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-    { href: '/projects', label: 'Projects', Icon: FolderKanban },
-    { href: '/surveys', label: 'Surveys', Icon: ClipboardList },
-    { href: '/repository', label: 'Documents', Icon: FolderOpen },
-    { href: '/data-cleaning', label: 'Data Validation', Icon: ShieldCheck },
-    { href: '/indicators', label: 'Indicators', Icon: TrendingUp },
-    { href: '/reports', label: 'Reports', Icon: FileText },
-    { href: '/users', label: 'Users', Icon: Users },
-    { href: '/settings', label: 'Settings', Icon: SettingsIcon },
+  const allNavItems = [
+    { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard, adminOnly: false },
+    { href: '/projects', label: 'Projects', Icon: FolderKanban, adminOnly: false },
+    { href: '/surveys', label: 'Surveys', Icon: ClipboardList, adminOnly: false },
+    { href: '/repository', label: 'Documents', Icon: FolderOpen, adminOnly: false },
+    { href: '/data-cleaning', label: 'Data Validation', Icon: ShieldCheck, adminOnly: false },
+    { href: '/indicators', label: 'Indicators', Icon: TrendingUp, adminOnly: false },
+    { href: '/reports', label: 'Reports', Icon: FileText, adminOnly: false },
+    { href: '/users', label: 'Users', Icon: Users, adminOnly: true },
+    { href: '/settings', label: 'Settings', Icon: SettingsIcon, adminOnly: true },
   ];
+
+  // Filter nav items based on user role
+  const navItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <div className="flex h-screen bg-gray-100">
