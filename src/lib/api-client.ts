@@ -422,6 +422,69 @@ class APIClient {
       : {};
     return this.client.patch('/settings/', data, config);
   }
+
+  // Analytics endpoints
+  async getVisualizations(projectId: number) {
+    return this.client.get(`/analytics/visualizations/?project=${projectId}`);
+  }
+
+  async getVisualization(id: number) {
+    return this.client.get(`/analytics/visualizations/${id}/`);
+  }
+
+  async createVisualization(data: any) {
+    return this.client.post('/analytics/visualizations/', data);
+  }
+
+  async updateVisualization(id: number, data: any) {
+    return this.client.patch(`/analytics/visualizations/${id}/`, data);
+  }
+
+  async deleteVisualization(id: number) {
+    return this.client.delete(`/analytics/visualizations/${id}/`);
+  }
+
+  async evaluateVisualization(id: number) {
+    return this.client.get(`/analytics/visualizations/${id}/evaluate/`);
+  }
+
+  async previewVisualization(data: any) {
+    return this.client.post('/analytics/visualizations/preview/', data);
+  }
+
+  async exportVisualization(id: number, format: 'csv' | 'excel') {
+    return this.client.get(`/analytics/visualizations/${id}/export/?format=${format}`, {
+      responseType: 'blob'
+    });
+  }
+
+  async getDashboards(projectId: number) {
+    return this.client.get(`/analytics/dashboards/?project=${projectId}`);
+  }
+
+  async getDashboard(id: number) {
+    return this.client.get(`/analytics/dashboards/${id}/`);
+  }
+
+  async createDashboard(data: any) {
+    return this.client.post('/analytics/dashboards/', data);
+  }
+
+  async updateDashboard(id: number, data: any) {
+    return this.client.patch(`/analytics/dashboards/${id}/`, data);
+  }
+
+  async deleteDashboard(id: number) {
+    return this.client.delete(`/analytics/dashboards/${id}/`);
+  }
+
+  async getDashboardData(id: number) {
+    return this.client.get(`/analytics/dashboards/${id}/data/`);
+  }
+
+  async getProjectAnalytics(projectId: number) {
+    return this.client.get(`/analytics/projects/${projectId}/analytics/`);
+  }
 }
 
 export const apiClient = new APIClient();
