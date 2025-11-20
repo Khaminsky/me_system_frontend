@@ -128,24 +128,55 @@ export default function ProjectAnalyticsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Project Analytics</h1>
             <p className="text-gray-600 mt-1">Data visualization and insights</p>
           </div>
-          
-          {/* Dashboard Selector */}
-          <select
-            value={selectedDashboard?.id || ''}
-            onChange={(e) => loadDashboard(Number(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            {dashboards.map((dashboard) => (
-              <option key={dashboard.id} value={dashboard.id}>
-                {dashboard.name}
-              </option>
-            ))}
-          </select>
+
+          <div className="flex gap-3">
+            <a
+              href={`/projects/${projectId}/analytics/builder`}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+            >
+              🎨 Analytics Builder
+            </a>
+
+            {dashboards.length > 0 && (
+              <select
+                value={selectedDashboard?.id || ''}
+                onChange={(e) => loadDashboard(Number(e.target.value))}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {dashboards.map((dashboard) => (
+                  <option key={dashboard.id} value={dashboard.id}>
+                    {dashboard.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
-        
+
         {loading ? (
           <div className="text-center py-12">
             <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        ) : dashboards.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">No Dashboards Yet</h2>
+            <p className="text-gray-600 mb-6">Get started by creating visualizations with our interactive builder</p>
+            <a
+              href={`/projects/${projectId}/analytics/builder`}
+              className="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Open Analytics Builder
+            </a>
+          </div>
+        ) : dashboardData.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p className="text-gray-600">This dashboard has no visualizations yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-12 gap-6">
