@@ -128,16 +128,22 @@ export default function FieldsPanel({ indicators, surveys }: FieldsPanelProps) {
                 
                 {expandedSurveys.has(survey.id) && (
                   <div className="px-2 pb-2 space-y-1">
-                    {survey.fields.map((field) => (
-                      <div
-                        key={field.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, field, 'field', survey.name)}
-                        className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded cursor-move hover:bg-gray-100 transition text-xs"
-                      >
-                        {field.name}
+                    {Array.isArray(survey.fields) && survey.fields.length > 0 ? (
+                      survey.fields.map((field) => (
+                        <div
+                          key={field.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, field, 'field', survey.name)}
+                          className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded cursor-move hover:bg-gray-100 transition text-xs"
+                        >
+                          {field.name}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-xs text-gray-400 text-center">
+                        No fields available
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </div>

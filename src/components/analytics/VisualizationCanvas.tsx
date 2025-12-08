@@ -57,8 +57,37 @@ export default function VisualizationCanvas({
         </div>
       );
     }
-    
+
     const { type, data, options } = visualizationData;
+
+    // Check if data is empty
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      return (
+        <div className="flex items-center justify-center h-full text-amber-600 bg-amber-50 rounded-lg border-2 border-amber-200">
+          <div className="text-center p-8">
+            <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-lg font-semibold mb-2">No Data Available</p>
+            <p className="text-sm mb-4">No indicator values found for the selected criteria.</p>
+            <div className="text-xs text-left bg-white p-4 rounded border border-amber-300 max-w-md mx-auto">
+              <p className="font-semibold mb-2">Possible reasons:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>No indicator values have been computed for this project</li>
+                <li>No data exists for the selected time period (LAST_30_DAYS)</li>
+                <li>The selected indicators haven't been calculated for any surveys in this project</li>
+              </ul>
+              <p className="mt-3 font-semibold">To fix this:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Go to a survey and compute indicator values</li>
+                <li>Make sure the survey belongs to this project</li>
+                <li>Try selecting a different time period</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      );
+    }
     
     switch (type) {
       case 'column_chart':

@@ -13,8 +13,8 @@ interface Indicator {
   id: number;
   name: string;
   indicator_type: string;
-  data_type: string;
-  project?: number;
+  unit: string;
+  is_active?: boolean;
 }
 
 interface Survey {
@@ -44,11 +44,16 @@ export default function AnalyticsBuilderPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch indicators
+
+      // Fetch all active indicators (indicators are global, not project-specific)
       const indicatorsResponse = await apiClient.getIndicators();
       const allIndicators = indicatorsResponse.data.results || indicatorsResponse.data;
-      setIndicators(allIndicators.filter((ind: Indicator) => ind.project === Number(projectId)));
+
+      // Filter only active indicators
+      const activeIndicators = allIndicators.filter((ind: Indicator) => ind.is_active !== false);
+      setIndicators(activeIndicators);
+
+      console.log('Loaded indicators:', activeIndicators);
       
       // Fetch surveys with fields
       const surveysResponse = await apiClient.getProjectSurveys(Number(projectId));
@@ -59,9 +64,23 @@ export default function AnalyticsBuilderPage() {
         projectSurveys.map(async (survey: Survey) => {
           try {
             const fieldsResponse = await apiClient.getSurveyFields(survey.id);
+            console.log(`Survey ${survey.id} fields response:`, fieldsResponse.data);
+
+            // Handle different response structures
+            let fields = [];
+            if (Array.isArray(fieldsResponse.data)) {
+              fields = fieldsResponse.data;
+            } else if (fieldsResponse.data?.results && Array.isArray(fieldsResponse.data.results)) {
+              fields = fieldsResponse.data.results;
+            } else if (fieldsResponse.data?.fields && Array.isArray(fieldsResponse.data.fields)) {
+              fields = fieldsResponse.data.fields;
+            } else {
+              console.warn(`Unexpected fields response structure for survey ${survey.id}:`, fieldsResponse.data);
+            }
+
             return {
               ...survey,
-              fields: fieldsResponse.data || []
+              fields: fields
             };
           } catch (error) {
             console.error(`Failed to fetch fields for survey ${survey.id}:`, error);
@@ -69,7 +88,8 @@ export default function AnalyticsBuilderPage() {
           }
         })
       );
-      
+
+      console.log('Surveys with fields:', surveysWithFields);
       setSurveys(surveysWithFields);
     } catch (error) {
       console.error('Failed to fetch data:', error);

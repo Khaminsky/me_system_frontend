@@ -13,12 +13,18 @@ interface ChartVisualizationProps {
     show_legend?: boolean;
     show_values?: boolean;
     colors?: string[];
+    title?: string;
+    xAxisLabel?: string;
+    yAxisLabel?: string;
   };
   onDataClick?: (data: any) => void;
 }
 
 export default function ChartVisualization({ data, type, options, onDataClick }: ChartVisualizationProps) {
   const colors = options.colors || ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
+  const title = options.title || '';
+  const xAxisLabel = options.xAxisLabel || 'Category';
+  const yAxisLabel = options.yAxisLabel || 'Value';
 
   const handleClick = (data: any) => {
     if (onDataClick) {
@@ -31,11 +37,20 @@ export default function ChartVisualization({ data, type, options, onDataClick }:
       case 'column_chart':
       case 'bar_chart':
         const ChartComponent = type === 'column_chart' ? BarChart : BarChart;
+        const isVertical = type === 'bar_chart';
         return (
-          <ChartComponent data={data} layout={type === 'bar_chart' ? 'vertical' : 'horizontal'}>
+          <ChartComponent data={data} layout={isVertical ? 'vertical' : 'horizontal'}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis
+              dataKey="name"
+              label={!isVertical ? { value: xAxisLabel, position: 'insideBottom', offset: -5 } : undefined}
+              type={isVertical ? 'number' : 'category'}
+            />
+            <YAxis
+              label={!isVertical ? { value: yAxisLabel, angle: -90, position: 'insideLeft' } : { value: xAxisLabel, angle: -90, position: 'insideLeft' }}
+              type={isVertical ? 'category' : 'number'}
+              dataKey={isVertical ? 'name' : undefined}
+            />
             <Tooltip />
             {options.show_legend && <Legend />}
             <Bar
@@ -51,8 +66,13 @@ export default function ChartVisualization({ data, type, options, onDataClick }:
         return (
           <LineChart data={data} onClick={handleClick}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis
+              dataKey="name"
+              label={{ value: xAxisLabel, position: 'insideBottom', offset: -5 }}
+            />
+            <YAxis
+              label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
+            />
             <Tooltip />
             {options.show_legend && <Legend />}
             <Line
@@ -68,8 +88,13 @@ export default function ChartVisualization({ data, type, options, onDataClick }:
         return (
           <AreaChart data={data} onClick={handleClick}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
+            <XAxis
+              dataKey="name"
+              label={{ value: xAxisLabel, position: 'insideBottom', offset: -5 }}
+            />
+            <YAxis
+              label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
+            />
             <Tooltip />
             {options.show_legend && <Legend />}
             <Area
@@ -111,8 +136,15 @@ export default function ChartVisualization({ data, type, options, onDataClick }:
   };
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      {renderChart()}
-    </ResponsiveContainer>
+    <div className="w-full">
+      {title && (
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+          {title}
+        </h3>
+      )}
+      <ResponsiveContainer width="100%" height={400}>
+        {renderChart()}
+      </ResponsiveContainer>
+    </div>
   );
 }

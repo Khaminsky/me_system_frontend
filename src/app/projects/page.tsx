@@ -27,10 +27,11 @@ interface FilterState {
 }
 
 // Action Menu Component
-function ActionMenu({ projectId, projectName, onDelete, onViewSurveys, onViewDocuments, onViewAnalytics }: {
+function ActionMenu({ projectId, projectName, onDelete, onEdit, onViewSurveys, onViewDocuments, onViewAnalytics }: {
   projectId: number;
   projectName: string;
   onDelete: () => void;
+  onEdit: () => void;
   onViewSurveys: () => void;
   onViewDocuments: () => void;
   onViewAnalytics: () => void;
@@ -101,8 +102,8 @@ function ActionMenu({ projectId, projectName, onDelete, onViewSurveys, onViewDoc
 
               <button
                 onClick={() => {
+                  onEdit();
                   setIsOpen(false);
-                  toast.info('Edit functionality coming soon!');
                 }}
                 className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
               >
@@ -138,6 +139,8 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<{ id: number; name: string; description: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; projectId: number | null; projectName: string }>({
     show: false,
     projectId: null,
@@ -153,6 +156,7 @@ export default function ProjectsPage() {
   });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue, formState: { errors: errorsEdit } } = useForm();
 
   const {
     currentPage,
@@ -197,6 +201,33 @@ export default function ProjectsPage() {
     } catch (error: any) {
       console.error('Error creating project:', error);
       toast.error(error.response?.data?.error || 'Failed to create project');
+    }
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject({
+      id: project.id,
+      name: project.name,
+      description: project.description || '',
+    });
+    setValue('name', project.name);
+    setValue('description', project.description || '');
+    setShowEditModal(true);
+  };
+
+  const onUpdateProject = async (data: any) => {
+    if (!editingProject) return;
+
+    try {
+      await apiClient.updateProject(editingProject.id, data);
+      toast.success('Project updated successfully!');
+      setShowEditModal(false);
+      resetEdit();
+      setEditingProject(null);
+      fetchProjects();
+    } catch (error: any) {
+      console.error('Error updating project:', error);
+      toast.error(error.response?.data?.error || 'Failed to update project');
     }
   };
 
@@ -366,6 +397,7 @@ export default function ProjectsPage() {
                             projectId={project.id}
                             projectName={project.name}
                             onDelete={() => setDeleteConfirm({ show: true, projectId: project.id, projectName: project.name })}
+                            onEdit={() => handleEditProject(project)}
                             onViewSurveys={() => handleViewSurveys(project.id)}
                             onViewDocuments={() => handleViewDocuments(project.id)}
                             onViewAnalytics={() => handleViewAnalytics(project.id)}
@@ -439,6 +471,65 @@ export default function ProjectsPage() {
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                   Create Project
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Project Modal */}
+      {showEditModal && editingProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Edit Project</h2>
+            <form onSubmit={handleSubmitEdit(onUpdateProject)}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Project Name *
+                  </label>
+                  <input
+                    type="text"
+                    {...registerEdit('name', { required: 'Project name is required' })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter project name"
+                  />
+                  {errorsEdit.name && (
+                    <p className="text-red-500 text-sm mt-1">{errorsEdit.name.message as string}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    {...registerEdit('description')}
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter project description (optional)"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    resetEdit();
+                    setEditingProject(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Update Project
                 </button>
               </div>
             </form>

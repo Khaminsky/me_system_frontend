@@ -482,6 +482,14 @@ class APIClient {
     return this.client.get(`/analytics/dashboards/${id}/data/`);
   }
 
+  async addVisualizationToDashboard(dashboardId: number, data: any) {
+    return this.client.post(`/analytics/dashboards/${dashboardId}/add_visualization/`, data);
+  }
+
+  async removeVisualizationFromDashboard(dashboardId: number, itemId: number) {
+    return this.client.delete(`/analytics/dashboards/${dashboardId}/items/${itemId}/`);
+  }
+
   async getProjectAnalytics(projectId: number) {
     return this.client.get(`/analytics/projects/${projectId}/analytics/`);
   }
