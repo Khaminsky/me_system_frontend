@@ -159,7 +159,7 @@ export default function IndicatorsPage() {
   } = usePagination({
     items: indicators,
     itemsPerPage: 10,
-    searchFields: ['name', 'type', 'unit', 'formula'],
+    searchFields: ['name', 'indicator_type', 'unit', 'formula'],
     defaultSortField: 'name',
     defaultSortDirection: 'asc'
   });
