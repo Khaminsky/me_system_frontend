@@ -8,7 +8,7 @@ interface Indicator {
   id: number;
   name: string;
   indicator_type: string;
-  data_type: string;
+  data_type?: string;
 }
 
 interface Survey {
