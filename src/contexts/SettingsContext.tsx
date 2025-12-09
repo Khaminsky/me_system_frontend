@@ -54,14 +54,42 @@ interface SettingsProviderProps {
 }
 
 export function SettingsProvider({ children }: SettingsProviderProps) {
-  const [settings, setSettings] = useState<SystemSettings | null>(defaultSettings);
+  // Load settings from localStorage first to avoid flash
+  const getInitialSettings = (): SystemSettings => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('system_settings');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {
+          console.error('Failed to parse cached settings:', e);
+        }
+      }
+    }
+    return defaultSettings;
+  };
+
+  const [settings, setSettings] = useState<SystemSettings | null>(getInitialSettings());
   const [loading, setLoading] = useState(true);
+
+  const applyTheme = (settings: SystemSettings) => {
+    const root = document.documentElement;
+    root.style.setProperty('--color-primary', settings.primary_color);
+    root.style.setProperty('--color-secondary', settings.secondary_color);
+    root.style.setProperty('--color-accent', settings.accent_color);
+    root.style.setProperty('--color-sidebar', settings.sidebar_color);
+  };
 
   const fetchSettings = async () => {
     try {
       const response = await apiClient.getPublicSystemSettings();
       setSettings(response.data);
-      
+
+      // Save to localStorage for future use
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('system_settings', JSON.stringify(response.data));
+      }
+
       // Apply theme colors to CSS variables
       if (response.data) {
         applyTheme(response.data);
@@ -75,15 +103,12 @@ export function SettingsProvider({ children }: SettingsProviderProps) {
     }
   };
 
-  const applyTheme = (settings: SystemSettings) => {
-    const root = document.documentElement;
-    root.style.setProperty('--color-primary', settings.primary_color);
-    root.style.setProperty('--color-secondary', settings.secondary_color);
-    root.style.setProperty('--color-accent', settings.accent_color);
-    root.style.setProperty('--color-sidebar', settings.sidebar_color);
-  };
-
   useEffect(() => {
+    // Apply theme immediately from cached settings
+    if (settings) {
+      applyTheme(settings);
+    }
+    // Fetch latest settings from API
     fetchSettings();
   }, []);
 

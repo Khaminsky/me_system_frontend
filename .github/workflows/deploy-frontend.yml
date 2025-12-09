@@ -3,11 +3,7 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - master
-    paths:
-      - 'me_system_frontend/**'
-      - '.github/workflows/deploy-frontend.yml'
-      - 'docker-compose.prod.yml'
+      - main
   workflow_dispatch:  # Allow manual trigger
 
 env:
@@ -25,7 +21,6 @@ jobs:
 
       - name: Build Frontend Docker image
         run: |
-          cd me_system_frontend
           docker build -t ${{ env.FRONTEND_IMAGE }} .
           docker save -o frontend.tar ${{ env.FRONTEND_IMAGE }}
 
@@ -33,7 +28,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-image
-          path: me_system_frontend/frontend.tar
+          path: frontend.tar
           retention-days: 1
 
   deploy:

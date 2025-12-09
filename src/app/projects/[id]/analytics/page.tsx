@@ -112,7 +112,7 @@ export default function ProjectAnalyticsPage() {
         return <PivotTable data={data} options={data.options} />;
 
       case 'single_value':
-        return <SingleValue data={data} options={data.options} />;
+        return <SingleValue data={data.data} options={data.options} />;
 
       default:
         return <div>Unsupported visualization type: {type}</div>;

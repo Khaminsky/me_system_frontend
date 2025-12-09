@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -25,9 +25,27 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Load sidebar state from localStorage
+  const getInitialSidebarState = (): boolean => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar_open');
+      if (saved !== null) {
+        return saved === 'true';
+      }
+    }
+    return true; // Default to open
+  };
+
+  const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebarState());
   const router = useRouter();
   const { settings } = useSettings();
+
+  // Save sidebar state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar_open', String(sidebarOpen));
+    }
+  }, [sidebarOpen]);
 
   // Get user from localStorage to check role
   const getUserRole = () => {
