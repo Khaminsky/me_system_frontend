@@ -289,8 +289,7 @@ export default function ProjectsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
               <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
+                onSearch={setSearchQuery}
                 placeholder="Search projects by name or description..."
               />
             </div>

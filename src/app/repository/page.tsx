@@ -184,8 +184,7 @@ export default function RepositoryPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
+                onSearch={setSearchQuery}
                 placeholder="Search documents by title, filename, or tags..."
               />
             </div>
