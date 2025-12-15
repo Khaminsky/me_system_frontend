@@ -62,7 +62,7 @@ export default function ReportsPage() {
   const handleSurveySelect = async (surveyId: number) => {
     setSelectedSurvey(surveyId);
     try {
-      const response = await apiClient.getReportSummary(surveyId);
+      const response = await apiClient.generateReport(surveyId);
       setSummary(response.data);
     } catch (error) {
       console.error('Failed to fetch summary:', error);

@@ -236,8 +236,8 @@ export default function DocumentList({ documents, onRefresh, showProject = true 
         isOpen={deleteConfirm.show}
         title="Delete Document"
         message={`Are you sure you want to delete "${deleteConfirm.documentTitle}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        confirmText="Delete"
+        variant="danger"
         onConfirm={handleDelete}
         onCancel={() => setDeleteConfirm({ show: false, documentId: null, documentTitle: '' })}
       />

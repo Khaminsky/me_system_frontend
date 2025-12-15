@@ -150,10 +150,6 @@ export default function ProjectsPage() {
     status: 'all',
     dateRange: 'all',
   });
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
-    key: 'created_at',
-    direction: 'desc',
-  });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEdit, setValue, formState: { errors: errorsEdit } } = useForm();
@@ -161,17 +157,22 @@ export default function ProjectsPage() {
   const {
     currentPage,
     totalPages,
+    itemsPerPage,
     paginatedItems: paginatedData,
     setCurrentPage: handlePageChange,
+    setItemsPerPage,
     searchQuery,
     setSearchQuery,
     filteredItems,
+    sortField,
+    sortDirection,
+    setSorting,
   } = usePagination<Project>({
     items: projects,
     itemsPerPage: 10,
     searchFields: ['name', 'description'],
-    defaultSortField: sortConfig.key as keyof Project,
-    defaultSortDirection: sortConfig.direction,
+    defaultSortField: 'created_at',
+    defaultSortDirection: 'desc',
   });
 
   useEffect(() => {
@@ -257,13 +258,6 @@ export default function ProjectsPage() {
     window.location.href = `/projects/${projectId}/analytics`;
   };
 
-  const handleSort = (key: string) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
-
   return (
     <Layout>
       <div className="space-y-6">
@@ -340,32 +334,40 @@ export default function ProjectsPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <SortableTableHeader
-                        label="Name"
-                        sortKey="name"
-                        currentSort={sortConfig}
-                        onSort={handleSort}
-                      />
+                        field="name"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Name
+                      </SortableTableHeader>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Description
                       </th>
                       <SortableTableHeader
-                        label="Surveys"
-                        sortKey="survey_count"
-                        currentSort={sortConfig}
-                        onSort={handleSort}
-                      />
+                        field="survey_count"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Surveys
+                      </SortableTableHeader>
                       <SortableTableHeader
-                        label="Created By"
-                        sortKey="created_by_username"
-                        currentSort={sortConfig}
-                        onSort={handleSort}
-                      />
+                        field="created_by_username"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Created By
+                      </SortableTableHeader>
                       <SortableTableHeader
-                        label="Created Date"
-                        sortKey="created_at"
-                        currentSort={sortConfig}
-                        onSort={handleSort}
-                      />
+                        field="created_at"
+                        currentSortField={sortField}
+                        currentSortDirection={sortDirection}
+                        onSort={setSorting}
+                      >
+                        Created Date
+                      </SortableTableHeader>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
@@ -412,7 +414,10 @@ export default function ProjectsPage() {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
+                totalItems={filteredItems.length}
+                itemsPerPage={itemsPerPage}
                 onPageChange={handlePageChange}
+                onItemsPerPageChange={setItemsPerPage}
               />
             </>
           )}

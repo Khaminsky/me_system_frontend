@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, ReactElement } from 'react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface ConfirmOptions {
@@ -13,7 +13,7 @@ interface ConfirmOptions {
 
 interface UseConfirmReturn {
   confirm: (options: ConfirmOptions) => Promise<boolean>;
-  ConfirmDialogComponent: () => JSX.Element | null;
+  ConfirmDialogComponent: () => ReactElement | null;
 }
 
 export function useConfirm(): UseConfirmReturn {
