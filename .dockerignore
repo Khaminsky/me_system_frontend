@@ -25,10 +25,12 @@ dist
 # Debug
 *.log
 
-# Local env files
+# Local env files - exclude ALL .env files (use build args instead)
+.env*
 .env
-.env*.local
 .env.local
+.env.production
+.env.development
 .env.development.local
 .env.test.local
 .env.production.local
