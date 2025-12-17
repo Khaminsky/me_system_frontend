@@ -16,9 +16,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Accept build arguments
+# Accept build arguments - MUST be set before any build commands
 ARG NEXT_PUBLIC_API_BASE_URL
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+# Force override any .env files by setting ENV after copy
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+
+# Debug: Show the env variable value during build
+RUN echo "Building with NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}"
+
+# Remove any .env files that might override the build arg
+RUN rm -f .env .env.local .env.production .env.development 2>/dev/null || true
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -33,6 +40,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Accept runtime environment variables
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
